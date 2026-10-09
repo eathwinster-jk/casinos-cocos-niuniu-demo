@@ -30,12 +30,30 @@
   }
 
   /**
+   * 判断当前是否跑在带登录代理的本地/隧道宿主上。
+   */
+  function hasLoginProxy() {
+    const host = global.location.hostname;
+    return host === 'localhost'
+      || host === '127.0.0.1'
+      || host.endsWith('.trycloudflare.com');
+  }
+
+  /**
    * 读取 JSON 响应并保留服务端提示。
    */
   async function requestJson(url, options, context) {
     try {
       const response = await fetch(url, options);
-      const payload = await response.json();
+      const contentType = response.headers.get('content-type') || '';
+      const text = await response.text();
+      if (!contentType.includes('application/json') || text.trimStart().startsWith('<')) {
+        if (!hasLoginProxy()) {
+          throw new Error('当前是静态外网站点，不能直接登录；请使用 Cloudflare 隧道测试地址');
+        }
+        throw new Error(`${context}返回了非 JSON 响应，请确认本地 web_host_server 已启动`);
+      }
+      const payload = JSON.parse(text);
       if (!response.ok) throw new Error(payload.msg || `${context}失败，HTTP ${response.status}`);
       return payload;
     } catch (error) {
@@ -49,6 +67,9 @@
    * 使用账号密码换取业务 UID 和 Token。
    */
   async function authenticate(account, password) {
+    if (!hasLoginProxy()) {
+      throw new Error('GitHub Pages 静态站无登录代理；请打开 Cloudflare 隧道地址再登录');
+    }
     const url = new URL(LOGIN_PATH, global.location.origin);
     url.searchParams.set('account', account);
     url.searchParams.set('password', password);
@@ -316,6 +337,9 @@
     const errorMessage = global.sessionStorage.getItem(SESSION_ERROR_KEY);
     global.sessionStorage.removeItem(SESSION_ERROR_KEY);
     if (errorMessage) showMessage(errorMessage, true);
+    else if (!hasLoginProxy()) {
+      showMessage('静态站仅预览；登录联调请用 Cloudflare 隧道地址', true);
+    }
     await restoreSession();
   }
 
