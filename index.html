@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
 
-  <title>Cocos Creator | casinos_cocos_client</title>
+  <title>牛牛游戏</title>
 
   <!--http://www.html5rocks.com/en/mobile/mobifying/-->
   <meta name="viewport"
@@ -36,8 +36,33 @@
 
   <link rel="stylesheet" type="text/css" href="style.css"/>
 
+  <link rel="stylesheet" href="web_host/web_host.css"/>
 </head>
 <body>
+  <main id="WebLoginHost" class="web-login-host">
+    <form id="WebLoginForm" class="web-login-card">
+      <h1 class="web-login-title">牛牛测试登录</h1>
+      <p class="web-login-description">支持账号密码或 UID Token 登录测试</p>
+      <div class="web-login-tabs" role="tablist">
+        <button id="WebAccountTab" class="web-login-tab is-active" type="button" data-login-mode="account">账号密码</button>
+        <button id="WebTokenTab" class="web-login-tab" type="button" data-login-mode="token">UID Token</button>
+      </div>
+      <div id="WebAccountFields">
+        <label class="web-login-label" for="WebLoginAccount">账号</label>
+        <input id="WebLoginAccount" class="web-login-input" type="text" autocomplete="username"/>
+        <label class="web-login-label" for="WebLoginPassword">密码</label>
+        <input id="WebLoginPassword" class="web-login-input" type="password" autocomplete="current-password"/>
+      </div>
+      <div id="WebTokenFields" class="web-login-fields-hidden">
+        <label class="web-login-label" for="WebLoginUid">UID</label>
+        <input id="WebLoginUid" class="web-login-input" type="number" min="1" inputmode="numeric"/>
+        <label class="web-login-label" for="WebLoginToken">Token</label>
+        <input id="WebLoginToken" class="web-login-input" type="password" autocomplete="off"/>
+      </div>
+      <button id="WebLoginButton" class="web-login-button" type="submit">登录</button>
+      <p id="WebLoginStatus" class="web-login-status" role="alert"></p>
+    </form>
+  </main>
   <div id="GameDiv" cc_exact_fit_screen="true">
       <div id="Cocos3dGameContainer">
         <canvas id="GameCanvas" oncontextmenu="event.preventDefault()" tabindex="99"></canvas>
@@ -56,8 +81,15 @@
 <!-- Import map -->
 <script src="src/import-map.json" type="systemjs-importmap" charset="utf-8"> </script>
 
+<script src="web_host/web_host.js" charset="utf-8"></script>
 <script>
-    System.import('./index.js').catch(function(err) { console.error(err); })
+  window.CocosWebGameHost.start({
+    startGame: function startCocosGame() {
+      return System.import('./index.js');
+    }
+  }).catch(function reportHostError(error) {
+    console.error('网页宿主启动失败', error);
+  });
 </script>
 
 </body>
